@@ -175,6 +175,14 @@ extension ViewController: UITableViewDataSource, UITableViewDelegate {
 
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
+        let person = people[indexPath.row]
+        let detailViewController = DetailViewController()
+        detailViewController.person = person
+        (UIApplication.shared.connectedScenes.first?.delegate as? SceneDelegate)?.changeViewController(
+                viewController: detailViewController,
+                animated: true,
+                animationOptions: .transitionFlipFromLeft
+        )
     }
 
 }
