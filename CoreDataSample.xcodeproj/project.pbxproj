@@ -65,12 +65,12 @@
 				4D50FDAC2AC07B2D0017E4E6 /* AppDelegate.swift */,
 				4D50FDAE2AC07B2D0017E4E6 /* SceneDelegate.swift */,
 				4D50FDB02AC07B2D0017E4E6 /* ViewController.swift */,
+				4D50FDCA2AC1E99B0017E4E6 /* DetailViewController.swift */,
+				4D50FDC62AC0841B0017E4E6 /* Extensions.swift */,
+				4D50FDB52AC07B2D0017E4E6 /* CoreDataSample.xcdatamodeld */,
 				4D50FDB82AC07B2D0017E4E6 /* Assets.xcassets */,
 				4D50FDBA2AC07B2D0017E4E6 /* LaunchScreen.storyboard */,
 				4D50FDBD2AC07B2D0017E4E6 /* Info.plist */,
-				4D50FDB52AC07B2D0017E4E6 /* CoreDataSample.xcdatamodeld */,
-				4D50FDC62AC0841B0017E4E6 /* Extensions.swift */,
-				4D50FDCA2AC1E99B0017E4E6 /* DetailViewController.swift */,
 			);
 			path = CoreDataSample;
 			sourceTree = "<group>";

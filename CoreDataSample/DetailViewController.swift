@@ -8,18 +8,24 @@
 import UIKit
 import SnapKit
 import CoreData
+import Foundation
 
 class DetailViewController: UIViewController {
 
+    var isEditingMode = false
     var person: NSManagedObject? {
         didSet {
             nameTextField.text = person?.value(forKey: "name") as? String
-            dateOfBirthTextField.text = person?.value(forKey: "dateOfBirth") as? String
             genderTextField.text = person?.value(forKey: "gender") as? String
+            let date = person?.value(forKey: "dateOfBirth") as? Date
+            if let date {
+                let dateFormatter = DateFormatter()
+                dateFormatter.dateFormat = "d.MM.y"
+                let stringDate = dateFormatter.string(from: date)
+                dateOfBirthTextField.text = stringDate
+            }
         }
     }
-
-    var isEditingMode = false
 
     // MARK: - UI
 
@@ -65,6 +71,7 @@ class DetailViewController: UIViewController {
     private lazy var dateOfBirthTextField: UITextField = {
         let textField = UITextField()
         textField.textColor = .black
+        textField.placeholder = "11.01.2000"
         textField.autocorrectionType = .no
         textField.autocapitalizationType = .none
         textField.isUserInteractionEnabled = false
@@ -77,6 +84,7 @@ class DetailViewController: UIViewController {
     private lazy var genderTextField: UITextField = {
         let textField = UITextField()
         textField.textColor = .black
+        textField.placeholder = "male"
         textField.autocorrectionType = .no
         textField.autocapitalizationType = .none
         textField.isUserInteractionEnabled = false
@@ -98,7 +106,6 @@ class DetailViewController: UIViewController {
     // MARK: - Setup
 
     func setupViews() {
-        isEditing = false
         view.backgroundColor = .white
         view.addSubview(backButton)
         view.addSubview(editButton)
@@ -155,12 +162,34 @@ class DetailViewController: UIViewController {
             genderTextField.isUserInteractionEnabled = false
             isEditingMode = false
             editButton.setTitle("Edit", for: .normal)
+            updatePerson(name: nameTextField.text, date: dateOfBirthTextField.text, gender: genderTextField.text)
         } else {
             nameTextField.isUserInteractionEnabled = true
             dateOfBirthTextField.isUserInteractionEnabled = true
             genderTextField.isUserInteractionEnabled = true
             isEditingMode = true
             editButton.setTitle("Save", for: .normal)
+        }
+    }
+
+    func updatePerson(name: String?, date: String?, gender: String?) {
+        guard let appDelegate =
+                UIApplication.shared.delegate as? AppDelegate else { return }
+        let managedContext = appDelegate.persistentContainer.viewContext
+        person?.setValue(name, forKeyPath: "name")
+        person?.setValue(gender, forKeyPath: "gender")
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "d.MM.y"
+        if let date, let validDate = dateFormatter.date(from: date) {
+            person?.setValue(validDate, forKeyPath: "dateOfBirth")
+        } else {
+            person?.setValue(nil, forKeyPath: "dateOfBirth")
+        }
+
+        do {
+            try managedContext.save()
+        } catch let error as NSError {
+            showUIAlert(message: "Could not save. \(error), \(error.userInfo)")
         }
     }
 
@@ -171,6 +200,16 @@ class DetailViewController: UIViewController {
                 animated: true,
                 animationOptions: .transitionFlipFromRight
         )
+    }
+
+    func showUIAlert(message: String) {
+        let action = UIAlertAction(title: "OK", style: .destructive)
+        let alertController
+        = UIAlertController(title: "Error!",
+                            message: message,
+                            preferredStyle: .alert)
+        alertController.addAction(action)
+        self.present(alertController, animated: true)
     }
 
 }

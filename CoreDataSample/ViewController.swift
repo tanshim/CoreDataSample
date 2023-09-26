@@ -62,8 +62,6 @@ class ViewController: UIViewController {
 
     func setupViews() {
         view.backgroundColor = .white
-        title = "Users"
-        navigationController?.navigationBar.prefersLargeTitles = true
         view.addSubview(nameTextField)
         view.addSubview(addUserButton)
         view.addSubview(usersTableView)
@@ -95,7 +93,7 @@ class ViewController: UIViewController {
     @objc func addUser() {
         guard let name = nameTextField.text,
               name.count > 0 else {
-            self.showUIAlert(message: "Enter name!")
+            showUIAlert(message: "Enter name!")
             return
         }
         nameTextField.text = ""
