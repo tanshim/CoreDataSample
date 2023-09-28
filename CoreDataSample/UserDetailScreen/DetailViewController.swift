@@ -10,20 +10,21 @@ import SnapKit
 import CoreData
 import Foundation
 
-class DetailViewController: UIViewController {
+protocol DetailViewDelegate: NSObjectProtocol {
+    var person: NSManagedObject? { get set }
+    func showUIAlert(message: String)
+}
 
+class DetailViewController: UIViewController, DetailViewDelegate {
+
+    private let detailPresenter = DetailPresenter()
     var isEditingMode = false
     var person: NSManagedObject? {
         didSet {
             nameTextField.text = person?.value(forKey: "name") as? String
             genderTextField.text = person?.value(forKey: "gender") as? String
             let date = person?.value(forKey: "dateOfBirth") as? Date
-            if let date {
-                let dateFormatter = DateFormatter()
-                dateFormatter.dateFormat = "d.MM.y"
-                let stringDate = dateFormatter.string(from: date)
-                dateOfBirthTextField.text = stringDate
-            }
+            dateOfBirthTextField.text = detailPresenter.convertDateToString(date: date)
         }
     }
 
@@ -101,6 +102,7 @@ class DetailViewController: UIViewController {
         super.viewDidLoad()
         setupViews()
         setupConstraints()
+        detailPresenter.setViewDelegate(detailViewDelegate: self)
     }
 
     // MARK: - Setup
@@ -162,7 +164,7 @@ class DetailViewController: UIViewController {
             genderTextField.isUserInteractionEnabled = false
             isEditingMode = false
             editButton.setTitle("Edit", for: .normal)
-            updatePerson(name: nameTextField.text, date: dateOfBirthTextField.text, gender: genderTextField.text)
+            detailPresenter.updatePerson(name: nameTextField.text, date: dateOfBirthTextField.text, gender: genderTextField.text)
         } else {
             nameTextField.isUserInteractionEnabled = true
             dateOfBirthTextField.isUserInteractionEnabled = true
@@ -172,29 +174,8 @@ class DetailViewController: UIViewController {
         }
     }
 
-    func updatePerson(name: String?, date: String?, gender: String?) {
-        guard let appDelegate =
-                UIApplication.shared.delegate as? AppDelegate else { return }
-        let managedContext = appDelegate.persistentContainer.viewContext
-        person?.setValue(name, forKeyPath: "name")
-        person?.setValue(gender, forKeyPath: "gender")
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "d.MM.y"
-        if let date, let validDate = dateFormatter.date(from: date) {
-            person?.setValue(validDate, forKeyPath: "dateOfBirth")
-        } else {
-            person?.setValue(nil, forKeyPath: "dateOfBirth")
-        }
-
-        do {
-            try managedContext.save()
-        } catch let error as NSError {
-            showUIAlert(message: "Could not save. \(error), \(error.userInfo)")
-        }
-    }
-
     @objc func goBack() {
-        let viewController = ViewController()
+        let viewController = UserListViewController()
         (UIApplication.shared.connectedScenes.first?.delegate as? SceneDelegate)?.changeViewController(
                 viewController: viewController,
                 animated: true,

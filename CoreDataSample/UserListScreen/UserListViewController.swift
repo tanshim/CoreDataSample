@@ -9,9 +9,15 @@ import UIKit
 import SnapKit
 import CoreData
 
-class ViewController: UIViewController {
+protocol UserListViewDelegate: NSObjectProtocol {
+    var people: [NSManagedObject] { get set }
+    func showUIAlert(message: String)
+}
+
+class UserListViewController: UIViewController, UserListViewDelegate {
 
     var people: [NSManagedObject] = []
+    private let userListPresenter = UserListPresenter()
 
     // MARK: - UI
 
@@ -55,7 +61,8 @@ class ViewController: UIViewController {
         super.viewDidLoad()
         setupViews()
         setupConstraints()
-        fetchPersons()
+        userListPresenter.setViewDelegate(userListViewDelegate: self)
+        userListPresenter.fetchPersons()
     }
 
     // MARK: - Setup
@@ -97,38 +104,8 @@ class ViewController: UIViewController {
             return
         }
         nameTextField.text = ""
-        self.savePerson(name: name)
+        userListPresenter.savePerson(name: name)
         self.usersTableView.reloadData()
-    }
-
-    func savePerson(name: String) {
-        guard let appDelegate =
-                UIApplication.shared.delegate as? AppDelegate else { return }
-        let managedContext = appDelegate.persistentContainer.viewContext
-        let entity = NSEntityDescription.entity(forEntityName: "Person",
-                                                in: managedContext)!
-        let person = NSManagedObject(entity: entity,
-                                     insertInto: managedContext)
-        person.setValue(name, forKeyPath: "name")
-        do {
-            try managedContext.save()
-            people.append(person)
-        } catch let error as NSError {
-            showUIAlert(message: "Could not save. \(error), \(error.userInfo)")
-        }
-    }
-
-    func fetchPersons() {
-        guard let appDelegate =
-            UIApplication.shared.delegate as? AppDelegate else { return }
-        let managedContext = appDelegate.persistentContainer.viewContext
-        let fetchRequest =
-            NSFetchRequest<NSManagedObject>(entityName: "Person")
-        do {
-            people = try managedContext.fetch(fetchRequest)
-        } catch let error as NSError {
-            showUIAlert(message: "Could not fetch. \(error), \(error.userInfo)")
-        }
     }
 
     func showUIAlert(message: String) {
@@ -145,7 +122,7 @@ class ViewController: UIViewController {
 
     // MARK: - Table View
 
-extension ViewController: UITableViewDataSource, UITableViewDelegate {
+extension UserListViewController: UITableViewDataSource, UITableViewDelegate {
 
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return people.count
@@ -162,12 +139,9 @@ extension ViewController: UITableViewDataSource, UITableViewDelegate {
     func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
         if editingStyle == .delete {
             let person = people[indexPath.row]
-            guard let appDelegate =
-                    UIApplication.shared.delegate as? AppDelegate else { return }
-            appDelegate.persistentContainer.viewContext.delete(person)
+            userListPresenter.deletePerson(person: person)
             people.remove(at: indexPath.row)
             tableView.deleteRows(at: [indexPath], with: .fade)
-            appDelegate.saveContext()
         }
     }
 
